@@ -1,0 +1,36 @@
+services:
+  redis:
+    image: docker.m.daocloud.io/redis/redis-stack-server:latest
+    command: ["redis-stack-server", "--appendonly", "yes"]
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./python-impl
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./python-impl/.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      REDIS_URL: redis://redis:6379/0
+      SQLITE_DB_PATH: /app/data/ecommerce.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - app_data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis_data:
+  app_data:

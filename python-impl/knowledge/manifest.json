@@ -1,0 +1,28 @@
+{
+  "documents": [
+    {
+      "doc_id": "DEMO-RETURNS-001",
+      "path": "raw/returns.md",
+      "version": 1,
+      "effective_date": "2026-01-01",
+      "applicability": "演示店铺全部普通商品",
+      "content_type": "demo"
+    },
+    {
+      "doc_id": "DEMO-SHIPPING-001",
+      "path": "raw/shipping.md",
+      "version": 1,
+      "effective_date": "2026-01-01",
+      "applicability": "演示店铺普通订单",
+      "content_type": "demo"
+    },
+    {
+      "doc_id": "DEMO-PRODUCT-001",
+      "path": "raw/product-support.md",
+      "version": 1,
+      "effective_date": "2026-01-01",
+      "applicability": "本文件列出的演示商品",
+      "content_type": "demo"
+    }
+  ]
+}

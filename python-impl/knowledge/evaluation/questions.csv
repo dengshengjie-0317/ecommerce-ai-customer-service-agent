@@ -1,0 +1,11 @@
+question,expected_source,answerable
+签收后几天内可以申请退货？,DEMO-RETURNS-001,true
+哪些商品不适用七天无理由退货？,DEMO-RETURNS-001,true
+退货审核通过后大约多久退款？,DEMO-RETURNS-001,true
+质量问题的退货运费由谁承担？,DEMO-RETURNS-001,true
+付款后通常多久发货？,DEMO-SHIPPING-001,true
+普通地区发货后通常几天送达？,DEMO-SHIPPING-001,true
+物流几天不更新可以怎么处理？,DEMO-SHIPPING-001,true
+EB-100 耳机使用什么接口充电？,DEMO-PRODUCT-001,true
+KB-200 键盘是多少键？,DEMO-PRODUCT-001,true
+EB-100 耳机的电池容量是多少？,,false
