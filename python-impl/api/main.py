@@ -10,7 +10,9 @@ from langgraph.checkpoint.redis.aio import AsyncRedisSaver
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.staticfiles import StaticFiles
+from swagger_ui_bundle import swagger_ui_path
 from agents.supervisor import create_supervisor_graph
 from core.state import AgentState
 from memory.short_term import ShortTermMemory
@@ -40,8 +42,24 @@ app = FastAPI(
     description="基于 LangGraph Supervisor 和领域专家子图的电商客服系统",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=None,
+)
+app.mount(
+    "/static/swagger",
+    StaticFiles(directory=swagger_ui_path),
+    name="swagger-static",
 )
 
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_docs():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - API 文档",
+        swagger_js_url="/static/swagger/swagger-ui-bundle.js",
+        swagger_css_url="/static/swagger/swagger-ui.css",
+        swagger_favicon_url="/static/swagger/favicon-32x32.png",
+    )
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
