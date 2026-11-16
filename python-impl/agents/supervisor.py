@@ -6,7 +6,12 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
 from agents.experts.chat_graph import create_chat_subgraph
-from agents.experts.complaint_graph import create_complaint_subgraph
+from agents.experts.complaint_graph import (
+    CANCEL_WORDS,
+    CONFIRM_WORDS,
+    create_complaint_subgraph,
+    normalize_confirmation,
+)
 from agents.experts.order_graph import create_order_subgraph
 from agents.experts.rag_graph import create_rag_subgraph
 from agents.intent_router import IntentDecision, IntentRouterAgent
@@ -54,24 +59,20 @@ def create_supervisor_graph(
             )
         else:
             pending_confirmation = (
-                state.get("task_status") == "awaiting_user"
-                and state.get("active_task") == "complaint"
-                and "confirmation" in state.get("pending_fields", [])
+                    bool(state.get("complaint_draft"))
+                    and bool(state.get("complaint_idempotency_key"))
+                    and state.get("complaint_action") == "awaiting_confirmation"
             )
-            normalized = message.strip().lower()
+            normalized = normalize_confirmation(message)
 
-            if pending_confirmation and normalized in {
-                "确认", "确认提交", "确认创建", "同意", "提交", "yes", "y"
-            }:
+            if pending_confirmation and normalized in CONFIRM_WORDS:
                 decision = IntentDecision(
                     intent="complaint",
                     route_source="continuation",
                     confidence=1.0,
                     reason="用户确认提交投诉",
                 )
-            elif pending_confirmation and normalized in {
-                "取消", "取消投诉", "不提交", "不同意", "不用了", "no", "n"
-            }:
+            elif pending_confirmation and normalized in CANCEL_WORDS:
                 decision = IntentDecision(
                     intent="complaint",
                     route_source="continuation",
