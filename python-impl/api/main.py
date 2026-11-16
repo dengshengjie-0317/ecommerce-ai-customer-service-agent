@@ -12,7 +12,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
-from swagger_ui_bundle import swagger_ui_path
+from pathlib import Path
 from agents.supervisor import create_supervisor_graph
 from core.state import AgentState
 from memory.short_term import ShortTermMemory
@@ -46,7 +46,9 @@ app = FastAPI(
 )
 app.mount(
     "/static/swagger",
-    StaticFiles(directory=swagger_ui_path),
+    StaticFiles(
+        directory=Path(__file__).resolve().parents[1] / "static" / "swagger"
+    ),
     name="swagger-static",
 )
 
