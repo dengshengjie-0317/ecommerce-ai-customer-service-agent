@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from langchain_core.messages import HumanMessage
@@ -20,12 +21,46 @@ from core.state import AgentState
 from retrieval.bm25 import BM25Retriever
 from retrieval.documents import load_knowledge_documents, split_knowledge_documents
 
+logger = logging.getLogger(__name__)
+
 
 def latest_user_message(state: AgentState) -> str:
     for message in reversed(state.get("messages", [])):
         if isinstance(message, HumanMessage):
             return str(message.content).strip()
     return ""
+
+
+def guard_expert(name: str, handler: Any):
+    async def run(state: AgentState) -> dict[str, Any]:
+        try:
+            return await handler(state)
+        except Exception:
+            logger.exception("专家执行失败: %s", name)
+
+            if name == "complaint":
+                response = (
+                    "本次投诉操作的结果暂时无法确认，"
+                    "请联系人工客服核实，避免重复登记。"
+                )
+            else:
+                response = (
+                    "当前服务暂时无法完成处理，"
+                    "请稍后重试或联系人工客服。"
+                )
+
+            return {
+                "current_agent": name,
+                "task_status": "failed",
+                "agent_result": {
+                    "response": response,
+                    "status": "failed",
+                    "citations": [],
+                },
+                "final_response": response,
+            }
+
+    return run
 
 
 def create_supervisor_graph(
@@ -59,9 +94,9 @@ def create_supervisor_graph(
             )
         else:
             pending_confirmation = (
-                    bool(state.get("complaint_draft"))
-                    and bool(state.get("complaint_idempotency_key"))
-                    and state.get("complaint_action") == "awaiting_confirmation"
+                bool(state.get("complaint_draft"))
+                and bool(state.get("complaint_idempotency_key"))
+                and state.get("complaint_action") == "awaiting_confirmation"
             )
             normalized = normalize_confirmation(message)
 
@@ -124,10 +159,22 @@ def create_supervisor_graph(
     graph = StateGraph(AgentState)
     graph.add_node("route", route)
     graph.add_node("clarify", clarify)
-    graph.add_node("rag", run_rag)
-    graph.add_node("order", order_graph)
-    graph.add_node("complaint", complaint_graph)
-    graph.add_node("chat", chat_graph)
+    graph.add_node(
+        "rag",
+        guard_expert("rag", run_rag),
+    )
+    graph.add_node(
+        "order",
+        guard_expert("order", order_graph.ainvoke),
+    )
+    graph.add_node(
+        "complaint",
+        guard_expert("complaint", complaint_graph.ainvoke),
+    )
+    graph.add_node(
+        "chat",
+        guard_expert("chat", chat_graph.ainvoke),
+    )
 
     graph.set_entry_point("route")
     graph.add_conditional_edges(
