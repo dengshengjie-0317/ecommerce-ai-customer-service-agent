@@ -26,5 +26,16 @@ class Settings:
     sqlite_db_path: Path = Path(
         os.getenv("SQLITE_DB_PATH", "./data/ecommerce.db")
     )
+    retrieval_backend: str = os.getenv(
+        "RETRIEVAL_BACKEND", "bm25"
+    ).strip().lower()
+
+    bge_model_path: Path = Path(
+        os.getenv("BGE_MODEL_PATH", "./models/bge-m3")
+    )
+
+    milvus_db_path: Path = Path(
+        os.getenv("MILVUS_DB_PATH", "./data/knowledge.db")
+    )
 
 settings = Settings()

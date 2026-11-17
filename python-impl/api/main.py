@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from retrieval.factory import open_retriever
 import logging
 import os
 import uuid
@@ -33,9 +33,24 @@ async def lifespan(app: FastAPI):
 
     initialize_database()
 
-    async with AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer:
-        graph = create_supervisor_graph(checkpointer=checkpointer)
-        yield
+    with open_retriever() as retriever:
+        async with AsyncRedisSaver.from_conn_string(
+            settings.redis_url
+        ) as checkpointer:
+            graph = create_supervisor_graph(
+                checkpointer=checkpointer,
+                retriever=retriever,
+            )
+
+            logger.info(
+                "检索后端已启用：%s",
+                settings.retrieval_backend,
+            )
+
+            try:
+                yield
+            finally:
+                graph = None
 
 app = FastAPI(
     title="电商 AI 智能客服",
@@ -139,5 +154,5 @@ if __name__ == "__main__":
         "api.main:app",
         host=os.getenv("HOST", "127.0.0.1"),
         port=int(os.getenv("PORT", "8000")),
-        reload=True,
-    )
+        reload=False,
+        workers=1,    )

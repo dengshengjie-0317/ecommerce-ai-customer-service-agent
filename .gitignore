@@ -40,3 +40,5 @@ logs/
 *.db
 *.sqlite3
 vector_store/
+/python-impl/wheelhouse/
+/python-impl/models/
