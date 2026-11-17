@@ -37,5 +37,14 @@ class Settings:
     milvus_db_path: Path = Path(
         os.getenv("MILVUS_DB_PATH", "./data/knowledge.db")
     )
+    reranker_enabled: bool = os.getenv(
+        "RERANKER_ENABLED", "false"
+    ).strip().lower() in {"true", "1", "yes"}
 
+    reranker_model_path: Path = Path(
+        os.getenv(
+            "RERANKER_MODEL_PATH",
+            "./models/bge-reranker-base",
+        )
+    )
 settings = Settings()

@@ -51,9 +51,20 @@ def open_retriever(
                 "Dense 知识库为空，请先完成知识块入库"
             )
 
-        yield HybridRetriever(
+        retriever = HybridRetriever(
             bm25=bm25,
             dense=dense,
         )
+
+        if config.reranker_enabled:
+            from retrieval.reranker import RerankingRetriever
+
+            retriever = RerankingRetriever(
+                retriever=retriever,
+                model_path=str(config.reranker_model_path),
+                candidate_k=10,
+            )
+
+        yield retriever
     finally:
         dense.close()
