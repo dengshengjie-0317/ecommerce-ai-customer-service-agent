@@ -47,4 +47,9 @@ class Settings:
             "./models/bge-reranker-base",
         )
     )
+    rag_min_rerank_score: float | None = (
+        float(os.environ["RAG_MIN_RERANK_SCORE"])
+        if os.getenv("RAG_MIN_RERANK_SCORE", "").strip()
+        else None
+    )
 settings = Settings()

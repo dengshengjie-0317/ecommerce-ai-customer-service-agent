@@ -14,7 +14,9 @@ def open_retriever(
     config: Settings = settings,
 ) -> Iterator[Any]:
     backend = config.retrieval_backend
-
+    if config.rag_min_rerank_score is not None:
+        if backend != "hybrid" or not config.reranker_enabled:
+            raise ValueError("启用相关性闸门需要 hybrid 模式并开启精排")
     if backend not in {"bm25", "hybrid"}:
         raise ValueError(
             "RETRIEVAL_BACKEND 只能是 bm25 或 hybrid"
@@ -65,6 +67,15 @@ def open_retriever(
                 candidate_k=10,
             )
 
+        if config.rag_min_rerank_score is not None:
+            from retrieval.confidence import ConfidenceGatedRetriever
+
+            retriever = ConfidenceGatedRetriever(
+                retriever=retriever,
+                min_score=config.rag_min_rerank_score,
+            )
+
         yield retriever
+
     finally:
         dense.close()
