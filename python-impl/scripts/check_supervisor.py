@@ -1,4 +1,5 @@
 import asyncio
+import csv
 import unittest
 from unittest.mock import patch
 
@@ -7,6 +8,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 import agents.supervisor as supervisor
 import agents.experts.complaint_graph as complaint_graph
+from agents.intent_router import classify_by_rules
+from retrieval.documents import KNOWLEDGE_DIR
 
 
 class StubModel:
@@ -125,6 +128,29 @@ class SupervisorRegression(unittest.IsolatedAsyncioTestCase):
                         "结果暂时无法确认",
                         result["final_response"],
                     )
+
+
+class IntentRouteRegression(unittest.TestCase):
+    def test_knowledge_evaluation_questions_route_to_rag(self):
+        path = KNOWLEDGE_DIR / "evaluation" / "questions.csv"
+        with path.open(encoding="utf-8-sig", newline="") as file:
+            cases = list(csv.DictReader(file))
+
+        for case in cases:
+            with self.subTest(question=case["question"]):
+                decision = classify_by_rules(case["question"])
+                self.assertIsNotNone(decision)
+                self.assertEqual(decision.intent, "rag")
+
+    def test_explicit_refund_complaint_keeps_complaint_priority(self):
+        decision = classify_by_rules("退款没到账，我要投诉")
+        self.assertIsNotNone(decision)
+        self.assertEqual(decision.intent, "complaint")
+
+    def test_explicit_order_tracking_routes_to_order(self):
+        decision = classify_by_rules("查一下我的订单现在到哪了")
+        self.assertIsNotNone(decision)
+        self.assertEqual(decision.intent, "order")
 
 
 if __name__ == "__main__":

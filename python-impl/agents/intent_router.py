@@ -74,9 +74,28 @@ RAG_TERMS = (
     "多久发货",
     "发货时间",
     "配送时效",
+    "物流几天不更新",
+    "物流页面一直没变化",
+    "物流几天不更新可以怎么处理",
+    "客服能保证哪天到",
     "物流信息长时间没有更新",
     "物流信息没有更新怎么办",
     "长时间没更新怎么办",
+    "退货审核",
+    "退款方式",
+    "退款已经批了",
+    "登记了退货",
+    "钱按什么方式退回",
+    "收到货后想退",
+    "最晚什么时候",
+    "质量问题",
+    "退货运费",
+    "退回去的邮费",
+    "买错了",
+    "工作日付款",
+    "商家才发货",
+    "偏远地区",
+    "送达时间",
     "签收后几天内",
     "签收后多少天",
     "几天内可以申请退货",
@@ -103,6 +122,7 @@ RAG_TERMS = (
     "频率",
     "材质参数",
     "多少键",
+    "多少个按键",
 )
 
 ORDER_TERMS = (
@@ -110,7 +130,11 @@ ORDER_TERMS = (
     "查订单",
     "查询订单",
     "我的订单",
-    "物流",
+    "查物流",
+    "查询物流",
+    "当前物流",
+    "物流到哪",
+    "物流状态",
     "快递到哪",
     "包裹到哪",
     "发货了吗",
@@ -146,14 +170,6 @@ def classify_by_rules(message: str) -> IntentDecision | None:
             reason="命中明确投诉或退款纠纷表达",
         )
 
-    # 询问退换货规则属于知识咨询，不要仅因出现“退货”而路由到投诉。
-    if any(term in text for term in RAG_TERMS):
-        return IntentDecision(
-            intent="rag",
-            route_source="rule",
-            confidence=0.9,
-            reason="命中商品或政策知识咨询表达",
-        )
     if ORDER_ID_PATTERN.search(text):
         return IntentDecision(
             intent="order",
@@ -167,6 +183,15 @@ def classify_by_rules(message: str) -> IntentDecision | None:
             route_source="rule",
             confidence=0.9,
             reason="命中订单或物流状态查询表达",
+        )
+
+    # 询问退换货规则属于知识咨询，不要仅因出现“退货”而路由到投诉。
+    if any(term in text for term in RAG_TERMS):
+        return IntentDecision(
+            intent="rag",
+            route_source="rule",
+            confidence=0.9,
+            reason="命中商品或政策知识咨询表达",
         )
 
     if text in CHAT_MESSAGES:
